@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceLogFilesReports", "ServiceLogFilesReports\ServiceLogFilesReports.csproj", "{E296104A-30E3-4228-BD22-9BA2FD0F00DD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApp1", "ConsoleApp1\ConsoleApp1.csproj", "{F1F548C8-915C-487B-AFB0-293EC5B1E2A5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E296104A-30E3-4228-BD22-9BA2FD0F00DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E296104A-30E3-4228-BD22-9BA2FD0F00DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E296104A-30E3-4228-BD22-9BA2FD0F00DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E296104A-30E3-4228-BD22-9BA2FD0F00DD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F1F548C8-915C-487B-AFB0-293EC5B1E2A5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F1F548C8-915C-487B-AFB0-293EC5B1E2A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F1F548C8-915C-487B-AFB0-293EC5B1E2A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F1F548C8-915C-487B-AFB0-293EC5B1E2A5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
