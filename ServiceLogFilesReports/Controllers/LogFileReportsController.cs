@@ -3,136 +3,66 @@ using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
 
 using ServiceLogFilesReports.Entities;
+using ServiceLogFilesReports.Workers.Abstractions;
 
 namespace ServiceLogFilesReports.Controllers;
 
 [Route("api/v1/[controller]")]
 [ApiController]
-public class LogFileReportsController
+public class LogFileReportsController : Controller
 {
-    [HttpGet("get-reports-by-regex-string")]
-    public async Task<IActionResult> GetAsync([FromQuery] string serviceName)
+    private readonly IReportBuilder _reportBuilder;
+    private readonly IFilesWorker _filesWorker;
+
+    public LogFileReportsController(IReportBuilder reportBuilder, IFilesWorker filesWorker)
+    {
+        _reportBuilder = reportBuilder;
+        _filesWorker = filesWorker;
+    }
+    
+    [HttpGet]
+    [Route("report")]
+    public async Task<IActionResult> GetAsync([FromBody] string serviceName, [FromBody] string path)
     {
         var regex = new Regex(serviceName);
 
-        var filesByServices = GetListsOfLogs(regex);
+        var files = _filesWorker.GetListOfFiles(regex, path);
+
+        var filesByServices = _filesWorker.GroupFilesByNames(files);
 
         var reports = new List<LogFileReport>();
         foreach (var service in filesByServices.Keys)
-            reports.Add(BuildReport(filesByServices[service]));
-
-        return OkResult(reports);
-    }
-
-    private Dictionary<string, List<string>> GetListsOfLogs(Regex regex)
-    {
-        var filesByServices = new Dictionary<string, List<string>>();
-
-        foreach (var path in Directory.GetFiles(Environment.CurrentDirectory))
         {
-            var file = path.Split('/').Last();
-            if (regex.IsMatch(file))
-            {
-                var fileNameParts = file.Split('.');
-                if (!filesByServices.ContainsKey(fileNameParts[0]))
-                    filesByServices[fileNameParts[0]] = new List<string>();
-                filesByServices[fileNameParts[0]].Add(file);
-            }
+            var report = _reportBuilder.BuildReport(filesByServices[service]);
+            reports.Add(report);
         }
 
-        return filesByServices;
+        return new JsonResult(reports);
     }
 
-    private LogFileReport BuildReport(List<string> logFiles)
+    [HttpPost]
+    [Route("log")]
+    public async Task<IActionResult> PostAsync(
+        [FromBody] string path,
+        [FromBody] string serviceName,
+        [FromBody] string logLine,
+        [FromBody] int? maxLogFileSize = null,
+        [FromBody] int? maxRotationsAmount = null)
     {
-        var report = new LogFileReport();
-
-        report.ServiceName = GetServiceName(logFiles);
-        report.EarliestLogLine = GetEarliestLogLineDateTime(logFiles);
-        report.NewestLogLine = GetNewestLogLineDateTime(logFiles);
-        report.CategoriesCounts = GetAmountOfLinesByCategories(logFiles);
-        report.RotationsAmount = GetAmountOfRotations(logFiles);
-
-        return report;
+        throw new NotImplementedException();
     }
 
-    private string GetServiceName(List<string> logFiles) => 
-        logFiles[0].Split('.')[0];
-
-    private DateTime GetEarliestLogLineDateTime(List<string> logFiles)
+    [HttpPut]
+    [Route("log")]
+    public async Task<IActionResult> PutAsync()
     {
-        var fileName = logFiles
-            .OrderByDescending(f => f)
-            .First();
-
-        using var file = new StreamReader(fileName);
-
-        var line = file.ReadLine()!;
-
-        return GetDateTimeFromLogLine(line);
+        throw new NotImplementedException();
     }
 
-    private DateTime GetNewestLogLineDateTime(List<string> logFiles)
+    [HttpDelete]
+    [Route("log")]
+    public async Task<IActionResult> DeleteAsync()
     {
-        var fileName = logFiles
-            .OrderBy(f => f)
-            .First();
-
-        using var file = new StreamReader(fileName);
-
-        var line = string.Empty;
-        while (!file.EndOfStream)
-        {
-            line = file.ReadLine();
-        }
-
-        return GetDateTimeFromLogLine(line!);
-    }
-
-    private Dictionary<string, int> GetAmountOfLinesByCategories(List<string> logFiles)
-    {
-        var linesAmountsByCategories = new Dictionary<string, int>();
-
-        foreach (var fileName in logFiles)
-        {
-            foreach (var line in File.ReadLines(fileName))
-            {
-                var category = GetParsedLogLine(line)[1];
-                if (!linesAmountsByCategories.ContainsKey(category))
-                    linesAmountsByCategories[category] = 0;
-                linesAmountsByCategories[category]++;
-            }
-        }
-
-        return linesAmountsByCategories;
-    }
-
-    private DateTime GetDateTimeFromLogLine(string line)
-    {
-        var parsedLine = GetParsedLogLine(line);
-        
-        return DateTime.Parse(parsedLine[0]);
-    }
-
-    private string[] GetParsedLogLine(string line) => 
-        line.Split('[', ']')
-            .Select(s => s.Trim())
-            .Where(s => s != "")
-            .ToArray();
-
-    private string GetCategoryFromLogLine(string line)
-    {
-        var parsedLine = GetParsedLogLine(line);
-
-        return parsedLine[1];
-    }
-
-    private int GetAmountOfRotations(List<string> logFiles)
-    {
-        var oldestFile = logFiles
-            .OrderByDescending(f => f)
-            .First();
-
-        return int.Parse(oldestFile.Split('.')[1]);
+        throw new NotImplementedException();
     }
 }
