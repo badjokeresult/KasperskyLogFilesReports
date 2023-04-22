@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using ServiceLogFilesReports.Entities;
 using ServiceLogFilesReports.Workers.Abstractions;
 
 namespace ServiceLogFilesReports.Controllers;
@@ -18,30 +19,25 @@ public class LogFilesController : Controller
     [Route("logs")]
     public async Task<IActionResult> GetLogsAsync([FromQuery] string path, [FromQuery] string serviceName)
     {
-        var logs = new List<string>();
-
-        foreach (var file in Directory.GetFiles(path))
-        {
-            if (file.Split('/').Last().Split('.').First() == serviceName)
-                logs.Add(file);
-        }
-
-        if (logs.Count > 0)
+        var logs = await _filesWorker.ReadAllLinesFromFilesAsync(path, serviceName);
+        
+        if (logs.ToList().Count > 0)
             return new JsonResult(logs);
         return NotFound();
     }
 
     [HttpPost]
     [Route("logs")]
-    public async Task<IActionResult> PostLogsAsync([FromBody] string path, List<IFormFile> files)
+    public async Task<IActionResult> PostLogsAsync(
+        [FromQuery] string path,
+        [FromQuery] string serviceName,
+        [FromQuery] int maxFileSize,
+        [FromQuery] int maxRotationsAmount,
+        [FromBody] IEnumerable<LogLine> logLines)
     {
-        foreach (var file in files)
+        foreach (var line in logLines)
         {
-            if (file.Length > 0)
-            {
-                await using var stream = System.IO.File.Create(file.Name);
-                await file.CopyToAsync(stream);
-            }
+            await _filesWorker.WriteLineToFileAsync(path, serviceName, line, maxFileSize, maxRotationsAmount);
         }
 
         foreach (var file in Directory.GetFiles(path))
@@ -56,53 +52,23 @@ public class LogFilesController : Controller
             await System.IO.File.WriteAllLinesAsync(file, linesWithAnonymizedEmails);
         }
         
-        return Ok(new {count = files.Count});
+        return Ok(new {count = logLines.ToList().Count});
     }
 
     [HttpPut]
     [Route("logs")]
-    public async Task<IActionResult> PutLogsAsync([FromBody] string path, List<IFormFile> files)
+    public async Task<IActionResult> PutLogsAsync(
+        [FromQuery] string path,
+        [FromQuery] string serviceName,
+        [FromBody] IEnumerable<LogLine> logLines)
     {
-        var opsCount = 0;
-        
-        foreach (var file in files)
-        {
-            if (file.Length > 0)
-            {
-                foreach (var oldFile in Directory.GetFiles(path))
-                {
-                    if (oldFile.EndsWith(path + file.Name))
-                    {
-                        System.IO.File.Delete(path + file.Name);
-                        await using var stream = System.IO.File.Create(path + file.Name);
-                        await file.CopyToAsync(stream);
-                        opsCount++;
-                    }
-                }
-            }
-        }
-        
-        return Ok(new {count = opsCount});
+        throw new NotImplementedException();
     }
 
     [HttpDelete]
     [Route("logs")]
-    public async Task<IActionResult> DeleteLogsAsync([FromBody] string path, List<IFormFile> files)
+    public async Task<IActionResult> DeleteLogsAsync([FromQuery] string path, [FromBody] List<IFormFile> files)
     {
-        var opsCount = 0;
-        
-        foreach (var file in files)
-        {
-            foreach (var oldFile in Directory.GetFiles(path))
-            {
-                if (oldFile.EndsWith(path + file.Name))
-                {
-                    System.IO.File.Delete(oldFile);
-                    opsCount++;
-                }
-            }
-        }
-
-        return Ok(new {count = opsCount});
+        throw new NotImplementedException();
     }
 }
