@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using ServiceLogFilesReports.Workers.Abstractions;
 
 namespace ServiceLogFilesReports.Controllers;
 
@@ -6,6 +7,13 @@ namespace ServiceLogFilesReports.Controllers;
 [ApiController]
 public class LogFilesController : Controller
 {
+    private readonly IFilesWorker _filesWorker;
+
+    public LogFilesController(IFilesWorker filesWorker)
+    {
+        _filesWorker = filesWorker;
+    }
+    
     [HttpGet]
     [Route("logs")]
     public async Task<IActionResult> GetLogsAsync([FromQuery] string path, [FromQuery] string serviceName)
@@ -34,6 +42,18 @@ public class LogFilesController : Controller
                 await using var stream = System.IO.File.Create(file.Name);
                 await file.CopyToAsync(stream);
             }
+        }
+
+        foreach (var file in Directory.GetFiles(path))
+        { 
+            var lines = await System.IO.File.ReadAllLinesAsync(file);
+            var linesWithAnonymizedEmails = new List<string>();
+            foreach (var line in lines)
+            {
+                linesWithAnonymizedEmails.Add(_filesWorker.GetAnonymizedEmailInLine(line));
+            }
+            
+            await System.IO.File.WriteAllLinesAsync(file, linesWithAnonymizedEmails);
         }
         
         return Ok(new {count = files.Count});

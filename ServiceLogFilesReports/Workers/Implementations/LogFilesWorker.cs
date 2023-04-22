@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.RegularExpressions;
 
 using ServiceLogFilesReports.Workers.Abstractions;
@@ -35,8 +36,30 @@ public class LogFilesWorker : IFilesWorker
         return filesByNames;
     }
 
-    public void AnonymizeEmailsInFiles(string file)
+    public string GetAnonymizedEmailInLine(string line)
     {
-        throw new NotImplementedException();
+        var pattern = new Regex(
+            @"^((([0-9A-Za-z]{1}[-0-9A-z\.]{0,30}[0-9A-Za-z]?)|([0-9А-Яа-я]{1}[-0-9А-я\.]{0,30}[0-9А-Яа-я]?))@([-A-Za-z]{1,}\.){1,}[-A-Za-z]{2,})$");
+
+        var words = line.Split(' ');
+        var anonymizedEmail = new StringBuilder();
+        foreach (var word in words)
+        {
+            if (pattern.IsMatch(word))
+            {
+                for (var i = 0; i < word.Length; i++)
+                {
+                    if (word[i] == '@')
+                        break;
+
+                    if (i % 2 != 0)
+                        anonymizedEmail.Append('*');
+                    else
+                        anonymizedEmail.Append(word[i]);
+                }
+            }
+        }
+
+        return anonymizedEmail.ToString();
     }
 }

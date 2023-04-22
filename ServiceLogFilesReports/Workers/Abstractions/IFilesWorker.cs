@@ -6,5 +6,5 @@ public interface IFilesWorker
 {
     public IEnumerable<string> GetListOfFiles(Regex pattern, string path);
     public Dictionary<string, IList<string>> GroupFilesByNames(IEnumerable<string> files);
-    public void AnonymizeEmailsInFiles(string file);
+    public string GetAnonymizedEmailInLine(string line);
 }
