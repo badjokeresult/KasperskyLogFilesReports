@@ -21,8 +21,8 @@ public class LogFileReportsController : Controller
     }
     
     [HttpGet]
-    [Route("report")]
-    public async Task<IActionResult> GetAsync([FromBody] string serviceName, [FromBody] string path)
+    [Route("reports")]
+    public async Task<IActionResult> GetReportsAsync([FromQuery] string serviceName, [FromQuery] string path)
     {
         var regex = new Regex(serviceName);
 
@@ -36,33 +36,8 @@ public class LogFileReportsController : Controller
             var report = _reportBuilder.BuildReport(filesByServices[service]);
             reports.Add(report);
         }
-
-        return new JsonResult(reports);
-    }
-
-    [HttpPost]
-    [Route("log")]
-    public async Task<IActionResult> PostAsync(
-        [FromBody] string path,
-        [FromBody] string serviceName,
-        [FromBody] string logLine,
-        [FromBody] int? maxLogFileSize = null,
-        [FromBody] int? maxRotationsAmount = null)
-    {
-        throw new NotImplementedException();
-    }
-
-    [HttpPut]
-    [Route("log")]
-    public async Task<IActionResult> PutAsync()
-    {
-        throw new NotImplementedException();
-    }
-
-    [HttpDelete]
-    [Route("log")]
-    public async Task<IActionResult> DeleteAsync()
-    {
-        throw new NotImplementedException();
+        if (reports.Count > 0)
+            return new JsonResult(reports);
+        return NotFound();
     }
 }
