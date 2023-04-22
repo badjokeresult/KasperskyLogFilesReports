@@ -8,6 +8,8 @@ public class LogFileReportBuilder : IReportBuilder
     public LogFileReport BuildReport(IEnumerable<string> files)
     {
         var report = new LogFileReport();
+        
+        
 
         report.ServiceName = GetServiceName(files);
         report.EarliestLogLine = GetEarliestLogLineDateTime(files);
@@ -27,6 +29,8 @@ public class LogFileReportBuilder : IReportBuilder
             .OrderBy(f => f)
             .SkipLast(1)
             .Last();
+        
+        Console.WriteLine($"*** *** *** {nameof(GetEarliestLogLineDateTime)}, FileName: {fileName}");
 
         using var file = new StreamReader(fileName);
 
