@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+
 using ServiceLogFilesReports.Entities;
 using ServiceLogFilesReports.Workers.Abstractions;
 
@@ -35,23 +36,8 @@ public class LogFilesController : Controller
         [FromQuery] int maxRotationsAmount,
         [FromBody] IEnumerable<LogLine> logLines)
     {
-        foreach (var line in logLines)
-        {
-            await _filesWorker.WriteLineToFileAsync(path, serviceName, line, maxFileSize, maxRotationsAmount);
-        }
+        await _filesWorker.WriteLinesToFilesAsync(path, serviceName, logLines, maxFileSize, maxRotationsAmount);
 
-        foreach (var file in Directory.GetFiles(path))
-        { 
-            var lines = await System.IO.File.ReadAllLinesAsync(file);
-            var linesWithAnonymizedEmails = new List<string>();
-            foreach (var line in lines)
-            {
-                linesWithAnonymizedEmails.Add(_filesWorker.GetAnonymizedEmailInLine(line));
-            }
-            
-            await System.IO.File.WriteAllLinesAsync(file, linesWithAnonymizedEmails);
-        }
-        
         return Ok(new {count = logLines.ToList().Count});
     }
 
@@ -62,13 +48,20 @@ public class LogFilesController : Controller
         [FromQuery] string serviceName,
         [FromBody] IEnumerable<LogLine> logLines)
     {
-        throw new NotImplementedException();
+        await _filesWorker.UpdateLinesInFilesAsync(path, serviceName, logLines);
+
+        return Ok(new {count = logLines.ToList().Count});
     }
 
     [HttpDelete]
     [Route("logs")]
-    public async Task<IActionResult> DeleteLogsAsync([FromQuery] string path, [FromBody] List<IFormFile> files)
+    public async Task<IActionResult> DeleteLogsAsync(
+        [FromQuery] string path,
+        [FromQuery] string serviceName,
+        [FromBody] IEnumerable<LogLine> logLines)
     {
-        throw new NotImplementedException();
+        await _filesWorker.DeleteLinesFromFilesAsync(path, serviceName, logLines);
+
+        return Ok(new {count = logLines.ToList().Count});
     }
 }

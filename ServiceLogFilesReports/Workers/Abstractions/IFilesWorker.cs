@@ -8,11 +8,10 @@ public interface IFilesWorker
 {
     public IEnumerable<string> GetListOfFiles(Regex pattern, string path);
     public Dictionary<string, IList<string>> GroupFilesByNames(IEnumerable<string> files);
-    public string GetAnonymizedEmailInLine(string line);
-    public Task WriteLineToFileAsync(
+    public Task WriteLinesToFilesAsync(
         string path,
         string serviceName,
-        LogLine logLine,
+        IEnumerable<LogLine> logLines,
         int maxFileSize,
         int maxRotationsAmount);
     public Task<IEnumerable<string>> ReadAllLinesFromFilesAsync(string path, string serviceName);
